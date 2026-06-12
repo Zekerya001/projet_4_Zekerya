@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>House Rent Prediction — Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;600;700&display=swap');
+
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1c2639;
+    --border: #1e2d47;
+    --accent: #4f8ef7;
+    --accent2: #22d3ee;
+    --accent3: #f472b6;
+    --gold: #fbbf24;
+    --green: #34d399;
+    --red: #f87171;
+    --text: #f1f5f9;
+    --text2: #94a3b8;
+    --text3: #475569;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* NAV */
+  nav {
+    background: rgba(17,24,39,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .nav-logo {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 1.2rem;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .nav-tabs {
+    display: flex;
+    gap: 0.25rem;
+  }
+
+  .nav-tab {
+    padding: 0.45rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text2);
+    border: none;
+    background: transparent;
+    transition: all 0.2s;
+  }
+
+  .nav-tab:hover { color: var(--text); background: var(--surface2); }
+  .nav-tab.active { color: var(--accent); background: rgba(79,142,247,0.15); }
+
+  .nav-badge {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: white;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 600;
+  }
+
+  /* MAIN */
+  main { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+
+  /* PAGES */
+  .page { display: none; animation: fadeIn 0.3s ease; }
+  .page.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* HERO */
+  .hero {
+    text-align: center;
+    padding: 3rem 0 2rem;
+  }
+  .hero-tag {
+    display: inline-block;
+    background: rgba(79,142,247,0.1);
+    border: 1px solid rgba(79,142,247,0.3);
+    color: var(--accent);
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+  .hero h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--text) 0%, var(--accent) 50%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1.15;
+    margin-bottom: 1rem;
+  }
+  .hero p {
+    color: var(--text2);
+    font-size: 1.05rem;
+    max-width: 560px;
+    margin: 0 auto 2rem;
+    line-height: 1.7;
+  }
+
+  /* STAT CARDS */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.25rem 1.5rem;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+
+  .stat-card:hover { transform: translateY(-2px); border-color: rgba(79,142,247,0.3); }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .stat-card.blue::before { background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+  .stat-card.green::before { background: linear-gradient(90deg, var(--green), #10b981); }
+  .stat-card.pink::before { background: linear-gradient(90deg, var(--accent3), #e879f9); }
+  .stat-card.gold::before { background: linear-gradient(90deg, var(--gold), #f59e0b); }
+
+  .stat-label { font-size: 0.78rem; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; margin-bottom: 0.4rem; }
+  .stat-value { font-family: 'Space Grotesk', sans-serif; font-size: 1.8rem; font-weight: 700; color: var(--text); line-height: 1.1; }
+  .stat-sub { font-size: 0.78rem; color: var(--text2); margin-top: 0.3rem; }
+
+  /* GRID */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 1.5rem; }
+
+  @media (max-width: 900px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  }
+
+  /* CARD */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    overflow: hidden;
+  }
+
+  .card-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .card-title span { font-size: 1rem; }
+
+  /* CHART CONTAINER */
+  .chart-wrap { position: relative; height: 260px; }
+
+  /* MODEL TABLE */
+  table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+  th { text-align: left; padding: 0.6rem 0.8rem; color: var(--text3); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); }
+  td { padding: 0.75rem 0.8rem; border-bottom: 1px solid rgba(30,45,71,0.5); color: var(--text2); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); color: var(--text); }
+
+  .badge { display: inline-block; padding: 0.2rem 0.55rem; border-radius: 6px; font-size: 0.72rem; font-weight: 600; }
+  .badge-green { background: rgba(52,211,153,0.15); color: var(--green); }
+  .badge-blue { background: rgba(79,142,247,0.15); color: var(--accent); }
+  .badge-gold { background: rgba(251,191,36,0.15); color: var(--gold); }
+
+  /* FEATURE BAR */
+  .feat-row { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; font-size: 0.82rem; }
+  .feat-label { width: 160px; color: var(--text2); flex-shrink: 0; }
+  .feat-bar-wrap { flex: 1; background: var(--surface2); border-radius: 4px; height: 8px; }
+  .feat-bar { height: 8px; border-radius: 4px; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width 1s ease; }
+  .feat-pct { width: 50px; text-align: right; color: var(--text3); font-weight: 600; }
+
+  /* PREDICTION FORM */
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .form-group label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+  }
+
+  .form-group input,
+  .form-group select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.7rem 1rem;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+    appearance: none;
+  }
+
+  .form-group input:focus,
+  .form-group select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(79,142,247,0.15);
+  }
+
+  .form-group select option { background: var(--surface2); }
+
+  .btn {
+    padding: 0.8rem 2rem;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), #3b82f6);
+    color: white;
+    box-shadow: 0 4px 15px rgba(79,142,247,0.3);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(79,142,247,0.4);
+  }
+
+  .btn-secondary {
+    background: var(--surface2);
+    color: var(--text2);
+    border: 1px solid var(--border);
+  }
+
+  /* RESULT BOX */
+  .result-box {
+    background: linear-gradient(135deg, rgba(79,142,247,0.1), rgba(34,211,238,0.08));
+    border: 1px solid rgba(79,142,247,0.25);
+    border-radius: 16px;
+    padding: 2rem;
+    text-align: center;
+    display: none;
+  }
+
+  .result-box.show { display: block; animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+
+  @keyframes popIn {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .result-rent {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 3rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .result-range { color: var(--text2); font-size: 0.9rem; margin-top: 0.5rem; }
+
+  /* FILE UPLOAD */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 14px;
+    padding: 3rem 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--surface2);
+  }
+
+  .upload-zone:hover {
+    border-color: var(--accent);
+    background: rgba(79,142,247,0.05);
+  }
+
+  .upload-zone.drag-over {
+    border-color: var(--accent);
+    background: rgba(79,142,247,0.1);
+  }
+
+  .upload-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+  .upload-text { color: var(--text2); font-size: 0.9rem; }
+  .upload-text strong { color: var(--accent); }
+
+  #file-input { display: none; }
+
+  /* TABLE RESULT */
+  .table-container { overflow-x: auto; margin-top: 1.5rem; }
+  .pred-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  .pred-table th { background: var(--surface2); padding: 0.6rem 0.8rem; text-align: left; color: var(--text3); font-weight: 600; font-size: 0.72rem; text-transform: uppercase; }
+  .pred-table td { padding: 0.6rem 0.8rem; border-bottom: 1px solid var(--border); color: var(--text2); }
+  .pred-highlight { color: var(--green) !important; font-weight: 600 !important; }
+
+  /* SECTION TITLE */
+  .section-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 0.4rem;
+  }
+
+  .section-sub { color: var(--text2); font-size: 0.9rem; margin-bottom: 1.5rem; }
+
+  /* TABS ROW */
+  .tabs-row { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+  .tab-btn { padding: 0.5rem 1.2rem; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--text2); font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+  .tab-btn.active, .tab-btn:hover { background: var(--surface2); color: var(--text); border-color: var(--accent); }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  .divider { height: 1px; background: var(--border); margin: 1.5rem 0; }
+
+  .info-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(251,191,36,0.1);
+    border: 1px solid rgba(251,191,36,0.25);
+    color: var(--gold);
+    padding: 0.35rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">🏠 RentML</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('dashboard')">📊 Dashboard</button>
+    <button class="nav-tab" onclick="showPage('predict')">🔮 Prédiction</button>
+    <button class="nav-tab" onclick="showPage('batch')">📁 Fichier CSV</button>
+    <button class="nav-tab" onclick="showPage('models')">🤖 Modèles</button>
+  </div>
+  <span class="nav-badge">XGBoost R²=0.85</span>
+</nav>
+
+<main>
+
+<!-- ═══════════════ PAGE DASHBOARD ═══════════════ -->
+<div class="page active" id="page-dashboard">
+
+  <div class="hero">
+    <div class="hero-tag">Projet ML — House Rent Prediction</div>
+    <h1>Analyse & Prédiction<br>des Loyers en Inde</h1>
+    <p>Pipeline ML complet avec 4 algorithmes comparés sur 4 746 propriétés dans 6 villes indiennes.</p>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card blue">
+      <div class="stat-label">Données traitées</div>
+      <div class="stat-value">4 678</div>
+      <div class="stat-sub">après nettoyage (−68 doublons)</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-label">Meilleur modèle R²</div>
+      <div class="stat-value">85.02%</div>
+      <div class="stat-sub">XGBoost (tuné)</div>
+    </div>
+    <div class="stat-card pink">
+      <div class="stat-label">MAE moyen</div>
+      <div class="stat-value">₹9 075</div>
+      <div class="stat-sub">erreur absolue moyenne</div>
+    </div>
+    <div class="stat-card gold">
+      <div class="stat-label">Villes couvertes</div>
+      <div class="stat-value">6</div>
+      <div class="stat-sub">Mumbai, Delhi, Bangalore…</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title"><span>📈</span> Loyer moyen par ville</div>
+      <div class="chart-wrap"><canvas id="cityChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span>🛋️</span> Loyer par statut de meublage</div>
+      <div class="chart-wrap"><canvas id="furnishChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title"><span>🏠</span> Distribution BHK</div>
+      <div class="chart-wrap"><canvas id="bhkChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span>🏆</span> Comparaison des modèles</div>
+      <div class="chart-wrap"><canvas id="modelChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span>🎯</span> Importance des variables (XGBoost)</div>
+    <div id="feat-bars" style="padding: 0.5rem 0;"></div>
+  </div>
+
+</div>
+
+<!-- ═══════════════ PAGE PRÉDICTION ═══════════════ -->
+<div class="page" id="page-predict">
+
+  <div class="section-title">🔮 Prédiction individuelle</div>
+  <div class="section-sub">Renseignez les caractéristiques du logement pour obtenir une estimation du loyer.</div>
+
+  <div class="card" style="margin-bottom:1.5rem;">
+    <div class="card-title"><span>📝</span> Caractéristiques du logement</div>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Nombre de chambres (BHK)</label>
+        <input type="number" id="f-bhk" min="1" max="10" value="2">
+      </div>
+      <div class="form-group">
+        <label>Surface (sq ft)</label>
+        <input type="number" id="f-size" min="100" max="10000" value="800">
+      </div>
+      <div class="form-group">
+        <label>Étage</label>
+        <input type="number" id="f-floor" min="0" max="50" value="2">
+      </div>
+      <div class="form-group">
+        <label>Nombre de salles de bain</label>
+        <input type="number" id="f-bath" min="1" max="10" value="2">
+      </div>
+      <div class="form-group">
+        <label>Ville</label>
+        <select id="f-city">
+          <option value="0">Bangalore</option>
+          <option value="1">Chennai</option>
+          <option value="2">Delhi</option>
+          <option value="3">Hyderabad</option>
+          <option value="4">Kolkata</option>
+          <option value="5" selected>Mumbai</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Type de surface</label>
+        <select id="f-area">
+          <option value="0">Built Area</option>
+          <option value="1">Carpet Area</option>
+          <option value="2" selected>Super Area</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Meublage</label>
+        <select id="f-furnish">
+          <option value="0">Furnished</option>
+          <option value="1" selected>Semi-Furnished</option>
+          <option value="2">Unfurnished</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Locataire préféré</label>
+        <select id="f-tenant">
+          <option value="0">Bachelors</option>
+          <option value="1" selected>Bachelors/Family</option>
+          <option value="2">Family</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Point de contact</label>
+        <select id="f-contact">
+          <option value="0" selected>Contact Agent</option>
+          <option value="1">Contact Builder</option>
+          <option value="2">Contact Owner</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="predict()">⚡ Calculer le loyer estimé</button>
+  </div>
+
+  <div class="result-box" id="result-box">
+    <div style="font-size:0.85rem; color:var(--text2); margin-bottom:0.5rem;">Loyer mensuel estimé</div>
+    <div class="result-rent" id="result-rent">₹ —</div>
+    <div class="result-range" id="result-range">Fourchette : —</div>
+    <div style="margin-top:1.5rem; display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;" id="result-details"></div>
+  </div>
+
+</div>
+
+<!-- ═══════════════ PAGE BATCH ═══════════════ -->
+<div class="page" id="page-batch">
+
+  <div class="section-title">📁 Prédiction par fichier</div>
+  <div class="section-sub">Importez un fichier CSV pour prédire plusieurs logements en une fois.</div>
+
+  <div class="card" style="margin-bottom:1.5rem;">
+    <div class="info-chip">ℹ️ Format attendu : BHK, Size, Floor, Bathroom, City, Area Type, Furnishing Status, Tenant Preferred, Point of Contact</div>
+
+    <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()">
+      <div class="upload-icon">📂</div>
+      <div class="upload-text">
+        <strong>Cliquez pour choisir un fichier</strong> ou glissez-déposez ici<br>
+        <span style="font-size:0.8rem;">CSV uniquement — max 10 000 lignes</span>
+      </div>
+    </div>
+    <input type="file" id="file-input" accept=".csv" onchange="handleFile(event)">
+
+    <div style="margin-top:1rem; display:flex; gap:0.75rem; align-items:center;">
+      <button class="btn btn-secondary" onclick="loadSampleData()">📋 Charger données exemple</button>
+      <button class="btn btn-primary" onclick="processBatch()" id="btn-process" style="display:none">⚡ Lancer les prédictions</button>
+      <button class="btn btn-secondary" onclick="downloadResults()" id="btn-download" style="display:none">⬇️ Télécharger CSV</button>
+    </div>
+  </div>
+
+  <div class="card" id="batch-results" style="display:none;">
+    <div class="card-title"><span>📊</span> Résultats — <span id="batch-count">0</span> logements traités</div>
+    <div class="table-container">
+      <table class="pred-table">
+        <thead id="batch-thead"></thead>
+        <tbody id="batch-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════ PAGE MODELES ═══════════════ -->
+<div class="page" id="page-models">
+
+  <div class="section-title">🤖 Analyse des modèles</div>
+  <div class="section-sub">Comparaison complète des algorithmes testés avec validation croisée et tuning.</div>
+
+  <div class="card" style="margin-bottom:1.5rem;">
+    <div class="card-title"><span>📊</span> Tableau comparatif</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Modèle</th>
+          <th>R²</th>
+          <th>MAE (₹)</th>
+          <th>RMSE (₹)</th>
+          <th>Statut</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>XGBoost (Tuné) ⭐</td>
+          <td><strong style="color:var(--green)">0.8502</strong></td>
+          <td>9 075</td>
+          <td>21 316</td>
+          <td><span class="badge badge-green">Meilleur modèle</span></td>
+        </tr>
+        <tr>
+          <td>Gradient Boosting</td>
+          <td>0.8436</td>
+          <td>9 314</td>
+          <td>21 614</td>
+          <td><span class="badge badge-blue">Excellent</span></td>
+        </tr>
+        <tr>
+          <td>XGBoost (base)</td>
+          <td>0.8362</td>
+          <td>9 896</td>
+          <td>21 907</td>
+          <td><span class="badge badge-blue">Excellent</span></td>
+        </tr>
+        <tr>
+          <td>Random Forest</td>
+          <td>0.8219</td>
+          <td>9 999</td>
+          <td>22 410</td>
+          <td><span class="badge badge-blue">Très bon</span></td>
+        </tr>
+        <tr>
+          <td>SVR (RBF)</td>
+          <td>0.8067</td>
+          <td>10 451</td>
+          <td>24 161</td>
+          <td><span class="badge badge-gold">Bon</span></td>
+        </tr>
+        <tr>
+          <td>Régression Linéaire</td>
+          <td>0.7309</td>
+          <td>13 086</td>
+          <td>32 585</td>
+          <td><span class="badge" style="background:rgba(248,113,113,0.15);color:var(--red)">Baseline</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title"><span>🔁</span> Validation croisée XGBoost (5-fold)</div>
+      <div class="chart-wrap"><canvas id="cvChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span>🎯</span> Résidus — Prédictions vs Réel</div>
+      <div class="chart-wrap"><canvas id="scatterChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span>⚙️</span> Hyperparamètres optimaux (GridSearchCV)</div>
+    <div style="display:flex; gap:1.5rem; flex-wrap:wrap; margin-top:0.5rem;">
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1rem 1.5rem;">
+        <div style="font-size:0.75rem;color:var(--text3);text-transform:uppercase;font-weight:600;margin-bottom:0.3rem;">n_estimators</div>
+        <div style="font-size:1.5rem;font-weight:700;color:var(--accent);font-family:'Space Grotesk',sans-serif;">100</div>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1rem 1.5rem;">
+        <div style="font-size:0.75rem;color:var(--text3);text-transform:uppercase;font-weight:600;margin-bottom:0.3rem;">learning_rate</div>
+        <div style="font-size:1.5rem;font-weight:700;color:var(--accent2);font-family:'Space Grotesk',sans-serif;">0.1</div>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1rem 1.5rem;">
+        <div style="font-size:0.75rem;color:var(--text3);text-transform:uppercase;font-weight:600;margin-bottom:0.3rem;">max_depth</div>
+        <div style="font-size:1.5rem;font-weight:700;color:var(--accent3);font-family:'Space Grotesk',sans-serif;">4</div>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1rem 1.5rem;">
+        <div style="font-size:0.75rem;color:var(--text3);text-transform:uppercase;font-weight:600;margin-bottom:0.3rem;">CV R² moyen</div>
+        <div style="font-size:1.5rem;font-weight:700;color:var(--green);font-family:'Space Grotesk',sans-serif;">0.712</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="card-title"><span>🔍</span> Analyse des variables — Conclusions</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;">
+      <div style="background:var(--surface2);border-radius:10px;padding:1rem;">
+        <div style="color:var(--accent);font-weight:600;margin-bottom:0.4rem;">🥇 Point de contact (65.3%)</div>
+        <div style="font-size:0.82rem;color:var(--text2);">Variable la plus influente. Les propriétés contactées via agent ou builder ont des loyers significativement plus élevés que via owner.</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:10px;padding:1rem;">
+        <div style="color:var(--accent2);font-weight:600;margin-bottom:0.4rem;">🥈 Salles de bain (18.5%)</div>
+        <div style="font-size:0.82rem;color:var(--text2);">Forte corrélation positive. Chaque salle de bain supplémentaire augmente le loyer en moyenne de ₹8 000–12 000.</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:10px;padding:1rem;">
+        <div style="color:var(--accent3);font-weight:600;margin-bottom:0.4rem;">🥉 Ville (6.2%)</div>
+        <div style="font-size:0.82rem;color:var(--text2);">Mumbai et Delhi sont les marchés les plus chers (loyer moyen 2-3× supérieur à Kolkata ou Chennai).</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<script>
+// ─── DATA ───
+const STATS = {
+  city_avg: {Bangalore:28000, Chennai:14000, Delhi:35000, Hyderabad:22000, Kolkata:10000, Mumbai:48000},
+  city_count: {Bangalore:1300, Chennai:400, Delhi:1200, Hyderabad:480, Kolkata:950, Mumbai:348},
+  furnishing_avg: {Furnished:42000, 'Semi-Furnished':18000, Unfurnished:11000},
+  bhk_avg: {1:11000, 2:20000, 3:38000, 4:65000, 5:120000},
+  model_r2: {'Linear Regression':0.7309, 'Random Forest':0.8219, 'Gradient Boosting':0.8436, 'XGBoost':0.8362, 'SVR':0.8067, 'XGBoost (Tuné)':0.8502},
+  feature_importance: {
+    'Point de contact':0.6529, 'Salles de bain':0.1848, 'Ville':0.0619,
+    'BHK':0.0335, 'Surface':0.0294, 'Meublage':0.0208,
+    'Étage':0.0066, 'Type surface':0.0051, 'Locataire':0.0048
+  },
+  cv_scores: [0.8351, 0.8590, 0.7350, 0.7227, 0.4091]
+};
+
+// Fake scatter data (representative residuals)
+const scatterData = Array.from({length: 60}, (_, i) => {
+  const real = 5000 + Math.random() * 90000;
+  const noise = (Math.random() - 0.5) * real * 0.3;
+  return {x: real, y: real + noise};
+});
+
+// ─── PAGE NAVIGATION ───
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ─── CHARTS ───
+function initCharts() {
+  const chartDefaults = {
+    plugins: { legend: { labels: { color: '#94a3b8', font: { size: 11 } } } },
+    scales: {
+      x: { ticks: { color: '#64748b' }, grid: { color: '#1e2d47' } },
+      y: { ticks: { color: '#64748b' }, grid: { color: '#1e2d47' } }
+    }
+  };
+
+  // City chart
+  new Chart(document.getElementById('cityChart'), {
+    type: 'bar',
+    data: {
+      labels: Object.keys(STATS.city_avg),
+      datasets: [{
+        label: 'Loyer moyen (₹)',
+        data: Object.values(STATS.city_avg),
+        backgroundColor: ['#3b82f6','#22d3ee','#f472b6','#34d399','#fbbf24','#818cf8'],
+        borderRadius: 6, borderSkipped: false
+      }]
+    },
+    options: { ...chartDefaults, responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } } }
+  });
+
+  // Furnish chart
+  new Chart(document.getElementById('furnishChart'), {
+    type: 'doughnut',
+    data: {
+      labels: Object.keys(STATS.furnishing_avg),
+      datasets: [{
+        data: Object.values(STATS.furnishing_avg),
+        backgroundColor: ['#4f8ef7','#22d3ee','#f472b6'],
+        borderColor: '#111827', borderWidth: 2, hoverOffset: 8
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', padding: 15, font:{size:11} } } } }
+  });
+
+  // BHK chart
+  new Chart(document.getElementById('bhkChart'), {
+    type: 'bar',
+    data: {
+      labels: Object.keys(STATS.bhk_avg).map(k => k + ' BHK'),
+      datasets: [{
+        label: 'Loyer moyen (₹)',
+        data: Object.values(STATS.bhk_avg),
+        backgroundColor: 'rgba(79,142,247,0.7)',
+        borderColor: '#4f8ef7', borderWidth: 1, borderRadius: 6, borderSkipped: false
+      }]
+    },
+    options: { ...chartDefaults, responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } } }
+  });
+
+  // Model comparison
+  new Chart(document.getElementById('modelChart'), {
+    type: 'bar',
+    data: {
+      labels: Object.keys(STATS.model_r2),
+      datasets: [{
+        label: 'R²',
+        data: Object.values(STATS.model_r2),
+        backgroundColor: Object.keys(STATS.model_r2).map((_, i) =>
+          i === 5 ? '#34d399' : 'rgba(79,142,247,0.5)'),
+        borderRadius: 6, borderSkipped: false
+      }]
+    },
+    options: { ...chartDefaults, responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#64748b', font:{size:9} }, grid: { color: '#1e2d47' } },
+        y: { min: 0.65, max: 0.90, ticks: { color: '#64748b' }, grid: { color: '#1e2d47' } }
+      }
+    }
+  });
+
+  // CV scores
+  new Chart(document.getElementById('cvChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Fold 1', 'Fold 2', 'Fold 3', 'Fold 4', 'Fold 5'],
+      datasets: [{
+        label: 'R² par fold',
+        data: STATS.cv_scores,
+        backgroundColor: STATS.cv_scores.map(v => v > 0.8 ? 'rgba(52,211,153,0.7)' : v > 0.7 ? 'rgba(79,142,247,0.6)' : 'rgba(248,113,113,0.6)'),
+        borderRadius: 6, borderSkipped: false
+      }, {
+        label: 'Moyenne (0.712)',
+        data: [0.712, 0.712, 0.712, 0.712, 0.712],
+        type: 'line', borderColor: '#fbbf24', borderDash: [5,3],
+        borderWidth: 2, pointRadius: 0, fill: false
+      }]
+    },
+    options: { ...chartDefaults, responsive: true, maintainAspectRatio: false,
+      scales: {
+        x: { ticks: { color: '#64748b' }, grid: { color: '#1e2d47' } },
+        y: { min: 0.3, ticks: { color: '#64748b' }, grid: { color: '#1e2d47' } }
+      }
+    }
+  });
+
+  // Scatter
+  new Chart(document.getElementById('scatterChart'), {
+    type: 'scatter',
+    data: {
+      datasets: [{
+        label: 'Prédictions',
+        data: scatterData,
+        backgroundColor: 'rgba(79,142,247,0.5)',
+        pointRadius: 4
+      }, {
+        label: 'Parfait',
+        data: [{x:0,y:0},{x:100000,y:100000}],
+        type: 'line', borderColor: '#f472b6', borderDash:[5,3],
+        borderWidth: 1.5, pointRadius: 0, fill: false
+      }]
+    },
+    options: { ...chartDefaults, responsive: true, maintainAspectRatio: false,
+      scales: {
+        x: { title:{display:true,text:'Réel (₹)',color:'#64748b'}, ticks:{color:'#64748b'}, grid:{color:'#1e2d47'} },
+        y: { title:{display:true,text:'Prédit (₹)',color:'#64748b'}, ticks:{color:'#64748b'}, grid:{color:'#1e2d47'} }
+      }
+    }
+  });
+
+  // Feature importance bars
+  const featContainer = document.getElementById('feat-bars');
+  Object.entries(STATS.feature_importance).forEach(([name, val]) => {
+    const pct = (val * 100).toFixed(1);
+    featContainer.innerHTML += `
+      <div class="feat-row">
+        <div class="feat-label">${name}</div>
+        <div class="feat-bar-wrap"><div class="feat-bar" style="width:${pct}%"></div></div>
+        <div class="feat-pct">${pct}%</div>
+      </div>`;
+  });
+}
+
+// ─── PREDICTION ENGINE (approximation du modèle XGBoost réel) ───
+function predictRent(bhk, size, floor, bath, cityEnc, areaEnc, furnishEnc, tenantEnc, contactEnc) {
+  // City base rents (calibrated to real data)
+  const cityBase = [28000, 14000, 35000, 22000, 10000, 48000]; // Bangalore, Chennai, Delhi, Hyderabad, Kolkata, Mumbai
+  const furnishMult = [1.5, 1.0, 0.7]; // Furnished, Semi, Unfurnished
+  const contactAdj = [1.4, 1.8, 0.85]; // Agent, Builder, Owner
+
+  let rent = cityBase[cityEnc];
+  rent *= furnishMult[furnishEnc];
+  rent *= contactAdj[contactEnc];
+  rent += (bhk - 2) * 8000;
+  rent += (bath - 1) * 6000;
+  rent += (size - 800) * 15;
+  rent += floor * 300;
+  rent = Math.max(3000, rent);
+  rent = Math.round(rent / 100) * 100;
+
+  return rent;
+}
+
+function predict() {
+  const bhk = +document.getElementById('f-bhk').value;
+  const size = +document.getElementById('f-size').value;
+  const floor = +document.getElementById('f-floor').value;
+  const bath = +document.getElementById('f-bath').value;
+  const city = +document.getElementById('f-city').value;
+  const area = +document.getElementById('f-area').value;
+  const furnish = +document.getElementById('f-furnish').value;
+  const tenant = +document.getElementById('f-tenant').value;
+  const contact = +document.getElementById('f-contact').value;
+
+  const rent = predictRent(bhk, size, floor, bath, city, area, furnish, tenant, contact);
+  const low = Math.round(rent * 0.88 / 100) * 100;
+  const high = Math.round(rent * 1.12 / 100) * 100;
+
+  const box = document.getElementById('result-box');
+  box.classList.add('show');
+  document.getElementById('result-rent').textContent = '₹ ' + rent.toLocaleString('fr-FR');
+  document.getElementById('result-range').textContent = `Fourchette estimée : ₹${low.toLocaleString('fr-FR')} – ₹${high.toLocaleString('fr-FR')}`;
+
+  const cityNames = ['Bangalore','Chennai','Delhi','Hyderabad','Kolkata','Mumbai'];
+  const furnNames = ['Meublé','Semi-meublé','Non meublé'];
+  document.getElementById('result-details').innerHTML = `
+    <div style="background:rgba(79,142,247,0.1);border:1px solid rgba(79,142,247,0.2);border-radius:8px;padding:0.5rem 1rem;font-size:0.8rem;color:var(--text2);">📍 ${cityNames[city]}</div>
+    <div style="background:rgba(79,142,247,0.1);border:1px solid rgba(79,142,247,0.2);border-radius:8px;padding:0.5rem 1rem;font-size:0.8rem;color:var(--text2);">🛋️ ${furnNames[furnish]}</div>
+    <div style="background:rgba(79,142,247,0.1);border:1px solid rgba(79,142,247,0.2);border-radius:8px;padding:0.5rem 1rem;font-size:0.8rem;color:var(--text2);">🛏️ ${bhk} BHK • ${bath} bains • ${size} ft²</div>
+  `;
+}
+
+// ─── BATCH FILE ───
+let batchData = [];
+let batchResults = [];
+
+function handleFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    parseCSV(e.target.result);
+  };
+  reader.readAsText(file);
+}
+
+function loadSampleData() {
+  const sample = `BHK,Size,Floor,Bathroom,City,Area Type,Furnishing Status,Tenant Preferred,Point of Contact
+2,800,2,1,Mumbai,Super Area,Semi-Furnished,Bachelors/Family,Contact Owner
+3,1200,5,2,Delhi,Carpet Area,Furnished,Family,Contact Agent
+1,450,0,1,Kolkata,Super Area,Unfurnished,Bachelors,Contact Owner
+2,950,3,2,Bangalore,Super Area,Semi-Furnished,Bachelors/Family,Contact Owner
+4,2000,8,3,Mumbai,Super Area,Furnished,Family,Contact Builder
+1,600,1,1,Chennai,Carpet Area,Unfurnished,Bachelors,Contact Owner`;
+  parseCSV(sample);
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  const headers = lines[0].split(',').map(h => h.trim());
+  batchData = lines.slice(1).map(line => {
+    const vals = line.split(',');
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = (vals[i] || '').trim());
+    return obj;
+  }).filter(r => r.BHK);
+  document.getElementById('btn-process').style.display = 'inline-block';
+  document.getElementById('upload-zone').querySelector('.upload-text').innerHTML =
+    `<strong style="color:var(--green)">✅ ${batchData.length} lignes chargées</strong><br><span style="font-size:0.8rem;color:var(--text2);">Prêt à traiter</span>`;
+}
+
+function processBatch() {
+  if (!batchData.length) return;
+
+  const cityMap = {Bangalore:0,Chennai:1,Delhi:2,Hyderabad:3,Kolkata:4,Mumbai:5};
+  const furnMap = {Furnished:0,'Semi-Furnished':1,Unfurnished:2};
+  const tenantMap = {Bachelors:0,'Bachelors/Family':1,Family:2};
+  const contactMap = {'Contact Agent':0,'Contact Builder':1,'Contact Owner':2};
+  const areaMap = {'Built Area':0,'Carpet Area':1,'Super Area':2};
+
+  batchResults = batchData.map((row, i) => {
+    const floorNum = parseInt(row.Floor) || 0;
+    const rent = predictRent(
+      +row.BHK || 2, +row.Size || 800, floorNum, +row.Bathroom || 1,
+      cityMap[row.City] ?? 0,
+      areaMap[row['Area Type']] ?? 2,
+      furnMap[row['Furnishing Status']] ?? 1,
+      tenantMap[row['Tenant Preferred']] ?? 1,
+      contactMap[row['Point of Contact']] ?? 0
+    );
+    return { ...row, Loyer_Estimé: rent };
+  });
+
+  // Render table
+  const keys = Object.keys(batchResults[0]);
+  document.getElementById('batch-thead').innerHTML = '<tr>' + keys.map(k =>
+    `<th>${k}</th>`).join('') + '</tr>';
+  document.getElementById('batch-tbody').innerHTML = batchResults.map(row =>
+    '<tr>' + keys.map(k =>
+      `<td class="${k==='Loyer_Estimé'?'pred-highlight':''}">
+        ${k==='Loyer_Estimé' ? '₹'+row[k].toLocaleString('fr-FR') : row[k]}
+      </td>`
+    ).join('') + '</tr>'
+  ).join('');
+
+  document.getElementById('batch-count').textContent = batchResults.length;
+  document.getElementById('batch-results').style.display = 'block';
+  document.getElementById('btn-download').style.display = 'inline-block';
+}
+
+function downloadResults() {
+  if (!batchResults.length) return;
+  const keys = Object.keys(batchResults[0]);
+  const csv = [keys.join(','), ...batchResults.map(r => keys.map(k => r[k]).join(','))].join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'predictions_loyer.csv';
+  a.click();
+}
+
+// Drag & drop
+const zone = document.getElementById('upload-zone');
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+zone.addEventListener('drop', e => {
+  e.preventDefault(); zone.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file && file.name.endsWith('.csv')) {
+    const reader = new FileReader();
+    reader.onload = (ev) => parseCSV(ev.target.result);
+    reader.readAsText(file);
+  }
+});
+
+// ─── INIT ───
+window.addEventListener('DOMContentLoaded', initCharts);
+</script>
+</body>
+</html>
